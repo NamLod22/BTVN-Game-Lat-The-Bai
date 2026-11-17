@@ -30,7 +30,7 @@ public class CardController : MonoBehaviour
 
     private void Start()
     {
-        // Random vị trí sibling mỗi khi ấn Play
+        
         if (transform.parent != null && transform.parent.childCount > 1)
         {
             transform.SetSiblingIndex(Random.Range(0, transform.parent.childCount));

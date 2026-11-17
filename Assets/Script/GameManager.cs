@@ -11,11 +11,15 @@ public class GameManager : MonoBehaviour
     public GameObject cardPrefabs;
     public Sprite[] cardIcons;
     public TMP_Text scoreText;
+    public TMP_Text timerText;
     public GameObject victoryUI;
+    public GameObject gameOverUI;
+    public float timeRemaining = 300f;
 
     private CardController firstCard;
     private CardController secondCard;
     private bool isChecking = false;
+    private bool isGameEnded = false;
     private int score = 0;
     private int matchedPairs = 0;
     private int totalPairs = 0;
@@ -49,7 +53,7 @@ public class GameManager : MonoBehaviour
                 if (c2 != null) c2.InitCard(i, cardIcons[i]);
             }
 
-            // Shuffle vị trí các thẻ bằng Fisher-Yates
+            
             int count = cardContainer.childCount;
             for (int i = count - 1; i > 0; i--)
             {
@@ -60,17 +64,51 @@ public class GameManager : MonoBehaviour
 
         score = 0;
         matchedPairs = 0;
+        timeRemaining = 300f;
+        isGameEnded = false;
         UpdateScoreUI();
+        UpdateTimerUI();
 
         if (victoryUI != null)
         {
             victoryUI.SetActive(false);
         }
+
+        if (gameOverUI != null)
+        {
+            gameOverUI.SetActive(false);
+        }
+    }
+
+    private void Update()
+    {
+        if (isGameEnded)
+        {
+            return;
+        }
+
+        timeRemaining -= Time.deltaTime;
+        if (timeRemaining <= 0f)
+        {
+            timeRemaining = 0f;
+            isGameEnded = true;
+            StopAllCoroutines();
+            isChecking = false;
+            UpdateTimerUI();
+
+            if (gameOverUI != null)
+            {
+                gameOverUI.SetActive(true);
+            }
+            return;
+        }
+
+        UpdateTimerUI();
     }
 
     public bool CanFlip()
     {
-        return !isChecking && secondCard == null;
+        return !isGameEnded && !isChecking && secondCard == null;
     }
 
     public void OnCardFlipped(CardController card)
@@ -100,9 +138,13 @@ public class GameManager : MonoBehaviour
             matchedPairs += 1;
             UpdateScoreUI();
 
-            if (matchedPairs >= totalPairs && victoryUI != null)
+            if (matchedPairs >= totalPairs)
             {
-                victoryUI.SetActive(true);
+                isGameEnded = true;
+                if (victoryUI != null)
+                {
+                    victoryUI.SetActive(true);
+                }
             }
         }
         else
@@ -122,6 +164,16 @@ public class GameManager : MonoBehaviour
         if (scoreText != null)
         {
             scoreText.text = "Score: " + score;
+        }
+    }
+
+    private void UpdateTimerUI()
+    {
+        if (timerText != null)
+        {
+            int minutes = Mathf.FloorToInt(timeRemaining / 60f);
+            int seconds = Mathf.FloorToInt(timeRemaining % 60f);
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
         }
     }
 }
